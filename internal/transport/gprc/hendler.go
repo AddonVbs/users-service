@@ -57,19 +57,31 @@ func (h *Handler) DeleteUser(ctx context.Context, req *userpb.DeleteUserRequest)
 	}
 	return &userpb.DeleteUserResponse{}, nil
 }
-
 func (h *Handler) GetUser(ctx context.Context, req *userpb.GetUserRequest) (*userpb.GetUserResponse, error) {
-
-	us, err := h.svc.GetUserForTasks(int(req.UserID))
+	us, err := h.svc.GetUserForTasks(int(req.Id))
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "get user: %v", err)
 	}
 
-	protoUsers := userpb.User{
-		Id:
+	// Маппим задачи
+	var protoTasks []*userpb.Task
+	for _, t := range us.Tasks {
+		protoTasks = append(protoTasks, &userpb.Task{
+			Id:     uint32(t.ID),
+			Title:  t.Title,
+			UserId: uint32(t.UserID),
+		})
 	}
 
-	return &userpb.GetUserResponse{User: &protoUsers}, nil
+	// Маппим пользователя
+	protoUser := userpb.User{
+		Id:       uint32(us.Id),
+		Email:    us.Email,
+		Password: us.Password,
+		Tasks:    protoTasks,
+	}
+
+	return &userpb.GetUserResponse{User: &protoUser}, nil
 }
 func (h *Handler) ListUsers(ctx context.Context, req *emptypb.Empty) (*userpb.ListUsersResponse, error) {
 	us, err := h.svc.GetAllUser()
@@ -79,11 +91,20 @@ func (h *Handler) ListUsers(ctx context.Context, req *emptypb.Empty) (*userpb.Li
 
 	var protoUsers []*userpb.User
 	for _, u := range us {
+		var protoTasks []*userpb.Task
+		for _, t := range u.Tasks {
+			protoTasks = append(protoTasks, &userpb.Task{
+				Id:     uint32(t.ID),
+				Title:  t.Title,
+				UserId: uint32(t.UserID),
+			})
+		}
+
 		protoUsers = append(protoUsers, &userpb.User{
 			Id:       uint32(u.Id),
-			UserId: 	
 			Email:    u.Email,
 			Password: u.Password,
+			Tasks:    protoTasks,
 		})
 	}
 

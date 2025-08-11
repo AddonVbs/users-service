@@ -1,12 +1,16 @@
 package user
 
 import (
-	//t "BackEnd/internal/taskservice"
 	"time"
 
 	"gorm.io/gorm"
 )
 
+type Task struct {
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	UserID int    `json:"user_id"`
+}
 type User struct {
 	CreatedAt time.Time      `json:"created_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
@@ -15,5 +19,5 @@ type User struct {
 	Password  string         `json:"password"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	//ALTER
-	//Tasks []t.Task `gorm:"foreignKey:UserID"`
+	Tasks []Task `gorm:"foreignKey:UserID"`
 }
